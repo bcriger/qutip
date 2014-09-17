@@ -38,6 +38,7 @@ qutip modules.
 
 import numpy as np
 from scipy.misc import factorial
+from qutip.qobj import Qobj
 
 
 def n_thermal(w, w_th):
@@ -392,3 +393,13 @@ def _version2int(version_string):
         "-dev")[0].split("rc")[0].split("a")[0].split("b")[0].split("post")[0].split('.')
     return sum([int(d if len(d) > 0 else 0) * (100 ** (3 - n))
                 for n, d in enumerate(str_list[:3])])
+
+def qobj_list(obj):
+    """
+    This function tests to see if the input is a :class:`Qobj` instance, and
+    wraps that `Qobj` in a list if it is. 
+    """
+    if isinstance(obj, Qobj):
+        return [obj]
+    else:
+        return obj

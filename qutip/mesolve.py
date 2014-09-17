@@ -53,6 +53,7 @@ from qutip.rhs_generate import rhs_generate
 from qutip.states import ket2dm
 from qutip.rhs_generate import _td_format_check, _td_wrap_array_str
 from qutip.settings import debug
+from qutip.utilities import qobj_list
 
 from qutip.sesolve import (_sesolve_list_func_td, _sesolve_list_str_td,
                            _sesolve_list_td, _sesolve_func_td, _sesolve_const)
@@ -182,14 +183,8 @@ def mesolve(H, rho0, tlist, c_ops, e_ops, args={}, options=None,
         which to calculate the expectation values.
 
     """
-
-    # check whether c_ops or e_ops is is a single operator
-    # if so convert it to a list containing only that operator
-    if isinstance(c_ops, Qobj):
-        c_ops = [c_ops]
-
-    if isinstance(e_ops, Qobj):
-        e_ops = [e_ops]
+    #Cast Qobj instances to lists of one element
+    c_ops, e_ops = map(qobj_list, [c_ops, e_ops])
 
     if isinstance(e_ops, dict):
         e_ops_dict = e_ops

@@ -71,6 +71,7 @@ from qutip.cy.stochastic import (cy_d1_rho_photocurrent,
 from qutip.ui.progressbar import TextProgressBar
 from qutip.solver import Options
 from qutip.settings import debug
+from qutip.utilities import qobj_list
 
 
 if debug:
@@ -410,6 +411,9 @@ def smesolve(H, rho0, times, c_ops, sc_ops, e_ops, **kwargs):
     if debug:
         print(inspect.stack()[0][3])
 
+    #Cast Qobj instances to lists of one element
+    c_ops, sc_ops, e_ops = map(qobj_list, [c_ops, sc_ops, e_ops])
+    
     if isket(rho0):
         rho0 = ket2dm(rho0)
 
@@ -1670,13 +1674,21 @@ def _rhs_psi_platen(H, psi_t, t, A_ops, dt, dW, d1, d2, args):
         # TODO: needs to be updated to support mutiple Weiner increments
         dpsi_t_H = (-1.0j * dt) * spmv(H, psi_t)
 
-        psi_t_1 = psi_t + dpsi_t_H + d1(A, psi_t) * dt + d2(A, psi_t)[0] * dW[a_idx, 0]
-        psi_t_p = psi_t + dpsi_t_H + d1(A, psi_t) * dt + d2(A, psi_t)[0] * sqrt_dt
-        psi_t_m = psi_t + dpsi_t_H + d1(A, psi_t) * dt - d2(A, psi_t)[0] * sqrt_dt
+        psi_t_1 = psi_t + dpsi_t_H + d1(A, psi_t) * dt + \
+                                            d2(A, psi_t)[0] * dW[a_idx, 0]
+        
+        psi_t_p = psi_t + dpsi_t_H + d1(A, psi_t) * dt + \
+                                            d2(A, psi_t)[0] * sqrt_dt
+        
+        psi_t_m = psi_t + dpsi_t_H + d1(A, psi_t) * dt - \
+                                            d2(A, psi_t)[0] * sqrt_dt
 
-        dpsi_t += 0.50 * (d1(A, psi_t_1) + d1(A, psi_t)) * dt + \
-            0.25 * (d2(A, psi_t_p)[0] + d2(A, psi_t_m)[0] + 2 * d2(A, psi_t)[0]) * dW[a_idx, 0] + \
-            0.25 * (d2(A, psi_t_p)[0] - d2(A, psi_t_m)[0]) * (dW[a_idx, 0] ** 2 - dt) / sqrt_dt
+        dt_term = d1(A, psi_t_1) + d1(A, psi_t)
+        dW_term = d2(A, psi_t_p)[0] + d2(A, psi_t_m)[0] + 2 * d2(A, psi_t)[0]
+        corr_term = d2(A, psi_t_p)[0] - d2(A, psi_t_m)[0]
+
+        dpsi_t += 0.50 * dt_term * dt +  0.25 * dW_term * dW[a_idx, 0] + \
+            0.25 * corr_term * (dW[a_idx, 0] ** 2 - dt) / sqrt_dt
 
     return dpsi_t
 
