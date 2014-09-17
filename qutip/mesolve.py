@@ -121,7 +121,7 @@ def mesolve(H, rho0, tlist, c_ops, e_ops, args={}, options=None,
     .. note::
 
         If an element in the list-specification of the Hamiltonian or
-        the list of collapse operators are in super-operator for it will be
+        the list of collapse operators are in super-operator form it will be
         added to the total Liouvillian of the problem with out further
         transformation. This allows for using mesolve for solving master
         equations that are not on standard Lindblad form.

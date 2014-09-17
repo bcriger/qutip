@@ -127,10 +127,10 @@ class StochasticSolverOptions:
         stochastic increament, for each stochastic collapse operator.
 
     args : dict / list
-        List of dictionary of additional problem-specific parameters.
+        List or dictionary of additional problem-specific parameters.
 
     ntraj : int
-        Number of trajectors.
+        Number of trajectories.
 
     nsubsteps : int
         Number of sub steps between each time-spep given in `times`.
@@ -141,7 +141,7 @@ class StochasticSolverOptions:
 
     d2 : function
         Function for calculating the operator-valued coefficient to the
-        stochastic increment(s) dW_n, where n is in [0, d2_len[.
+        stochastic increment(s) dW_n, where n is in [0, d2_len].
 
     d2_len : int (default 1)
         The number of stochastic increments in the process.
@@ -785,8 +785,8 @@ def _ssesolve_single_trajectory(data, H, dt, times, N_store, N_substeps, psi_t,
                                                    psi_t, 0)
                     else:
                         m_expt = 0
-                    measurements[t_idx, m_idx, dW_idx] = (m_expt +
-                                                          dW_factor * dW[m_idx, t_idx, :, dW_idx].sum() /
+                    measurements[t_idx, m_idx, dW_idx] = \
+                    (m_expt + dW_factor * dW[m_idx, t_idx, :, dW_idx].sum() /
                                                           (dt * N_substeps))
 
     if d2_len == 1:
@@ -1463,12 +1463,14 @@ def _generate_noise_Milstein(sc_len, N_store, N_substeps, d2_len, dt):
     generate noise terms for the fast Milstein scheme
     """
     dW_temp = np.sqrt(dt) * scipy.randn(sc_len, N_store, N_substeps, 1)
+    strat_noise = 0.5 * (dW_temp * dW_temp - dt * 
+                            np.ones((sc_len, N_store, N_substeps, 1)))
     if sc_len == 1:
-        noise = np.vstack([dW_temp, 0.5 * (dW_temp * dW_temp - dt *
-                          np.ones((sc_len, N_store, N_substeps, 1)))])
+        noise = np.vstack([dW_temp, strat_noise])
     else:
-        noise = np.vstack([dW_temp, 0.5 * (dW_temp * dW_temp - dt * np.ones((sc_len, N_store, N_substeps, 1)))] +
-                          [[dW_temp[n] * dW_temp[m] for (n, m) in np.ndindex(sc_len, sc_len) if n > m]])
+        cross_terms = [dW_temp[n] * dW_temp[m] 
+                        for (n, m) in np.ndindex(sc_len, sc_len) if n > m]
+        noise = np.vstack([dW_temp, strat_noise] + [cross_terms])
     return noise
 
 
