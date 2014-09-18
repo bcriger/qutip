@@ -1836,3 +1836,31 @@ def _rhs_rho_milstein_homodyne_fast(L, rho_t, t, A, dt, ddW, d1, d2, args):
     drho_t += np.dot(dW, d_vec[:-1])
 
     return drho_t
+
+def _smesolve_const(H, rho0, times, c_ops, sc_ops, e_ops, **kwargs):
+    """
+    Internal function, prepares input for `_generic_sde_solve` when the
+    arguments `H`, `c_ops`, `sc_ops`, `m_ops` are all constant.
+    """
+    pass
+
+def _smesolve_list_str_td(H, rho0, times, c_ops, sc_ops, e_ops, **kwargs):
+    """
+    Internal function, prepares input for `_generic_sde_solve` when the
+    arguments `H`, `c_ops`, `sc_ops`, `m_ops` are all constant.
+    """
+    pass
+
+def _smesolve_list_func_td(H, rho0, times, c_ops, sc_ops, e_ops, **kwargs):
+    """
+    Internal function, prepares input for `_generic_sde_solve` when the
+    arguments `H`, `c_ops`, `sc_ops`, `m_ops` are all constant.
+    """
+    pass
+
+def _smesolve_func_td(H, rho0, times, c_ops, sc_ops, e_ops, **kwargs):
+    """
+    Internal function, prepares input for `_generic_sde_solve` when the
+    arguments `H`, `c_ops`, `sc_ops`, `m_ops` are all constant.
+    """
+    pass

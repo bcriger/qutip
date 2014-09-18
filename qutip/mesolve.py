@@ -440,7 +440,7 @@ def drho_list_td_with_state(t, rho, L_list, args):
 
 
 # -----------------------------------------------------------------------------
-# A time-dependent dissipative master equation on the list-string format for
+# A time-dependent dissipative master equation in the list-string format for
 # cython compilation
 #
 def _mesolve_list_str_td(H_list, rho0, tlist, c_list, e_ops, args, opt,
@@ -664,7 +664,7 @@ def _mesolve_const(H, rho0, tlist, c_op_list, e_ops, args, opt,
 
 
 #
-# evaluate drho(t)/dt according to the master eqaution
+# evaluate drho(t)/dt according to the master equation
 # [no longer used, replaced by cython function]
 #
 def _ode_rho_func(t, rho, L):
@@ -778,7 +778,7 @@ def _ode_rho_func_td_with_state(t, rho, L0, L_func, args):
 
 def _generic_ode_solve(r, rho0, tlist, e_ops, opt, progress_bar):
     """
-    Internal function for solving ME. Solve an ODE which solver parameters
+    Internal function for solving ME. Solve an ODE with solver parameters
     already setup (r). Calculate the required expectation values or invoke
     callback function at each time step.
     """
