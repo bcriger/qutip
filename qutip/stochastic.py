@@ -1858,7 +1858,7 @@ def _new_smesolve(H, rho0, times, c_ops, sc_ops, e_ops, **kwargs):
                                                      args, tlist)
 
     # check for type (if any) of time-dependent inputs
-    _, n_func, n_str = _stoc_td_format_check(H, c_ops, sc_ops)
+    _, n_func, n_str = _td_format_check(H, c_ops, sc_ops, solver='sme')
 
     res = None
 

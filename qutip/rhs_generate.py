@@ -220,7 +220,7 @@ def rhs_generate(H, c_ops, args={}, options=Options(), name=None,
             pass
 
 
-def _td_format_check(H, c_ops, solver='me'):
+def _td_format_check(H, c_ops, sc_ops=None, solver='me'):
     """
     Checks on time-dependent format.
     """
@@ -253,6 +253,7 @@ def _td_format_check(H, c_ops, solver='me'):
         raise TypeError("Incorrect hamiltonian specification")
 
     # the the whole thing again for c_ops
+    '''
     c_const = []
     c_func = []
     c_str = []
@@ -277,7 +278,10 @@ def _td_format_check(H, c_ops, solver='me'):
                             "Incorrect collapse operator specification")
     else:
         raise TypeError("Incorrect collapse operator specification")
-
+    '''
+    c_const, c_func, c_str = collapse_op_check(c_ops)
+    if sc_ops:
+        sc_const, sc_func, sc_str = collapse_op_check(sc_ops)
     #
     # if n_str == 0 and n_func == 0:
     #     # no time-dependence at all
@@ -353,6 +357,10 @@ def _td_format_check(H, c_ops, solver='me'):
                 raise Exception("Error determining time-dependence.")
 
         return time_type, [h_const, h_func, h_str], [c_const, c_func, c_str]
+    elif solver = 'sme':
+        pass
+    else:
+        raise ValueError("Unrecognized solver: %s".solver)
 
 
 def _td_wrap_array_str(H, c_ops, args, times):
@@ -404,3 +412,31 @@ def _td_wrap_array_str(H, c_ops, args, times):
                          "be a dictionary")
 
     return H_new, c_ops_new, args_new
+
+def collapse_op_check(c_ops):
+    c_const = []
+    c_func = []
+    c_str = []
+    if isinstance(c_ops, list):
+        for k in range(len(c_ops)):
+            if isinstance(c_ops[k], Qobj):
+                c_const.append(k)
+            elif isinstance(c_ops[k], list):
+                if len(c_ops[k]) != 2 or not isinstance(c_ops[k][0], Qobj):
+                    raise TypeError(
+                        "Incorrect collapse operator specification")
+                else:
+                    if isinstance(c_ops[k][1], (FunctionType,
+                                                BuiltinFunctionType, partial)):
+                        c_func.append(k)
+                    elif isinstance(c_ops[k][1], str):
+                        c_str.append(k)
+                    elif isinstance(c_ops[k][1], np.ndarray):
+                        c_str.append(k)
+                    else:
+                        raise TypeError(
+                            "Incorrect collapse operator specification")
+    else:
+        raise TypeError("Incorrect collapse operator specification")
+
+    return c_const, c_func, c_str 
