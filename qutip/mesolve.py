@@ -53,7 +53,6 @@ from qutip.rhs_generate import rhs_generate
 from qutip.states import ket2dm
 from qutip.rhs_generate import _td_format_check, _td_wrap_array_str
 from qutip.settings import debug
-from qutip.utilities import qobj_list
 
 from qutip.sesolve import (_sesolve_list_func_td, _sesolve_list_str_td,
                            _sesolve_list_td, _sesolve_func_td, _sesolve_const)
@@ -1086,3 +1085,15 @@ def odesolve(H, rho0, tlist, c_op_list, e_ops, args=None, options=None):
         return output.expect
     else:
         return output.states
+
+def qobj_list(obj):
+    """
+    Convenience function:
+
+    This function tests to see if the input is a :class:`Qobj` instance, and
+    wraps that `Qobj` in a list if it is. 
+    """
+    if isinstance(obj, Qobj):
+        return [obj]
+    else:
+        return obj

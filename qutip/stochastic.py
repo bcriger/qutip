@@ -71,7 +71,7 @@ from qutip.cy.stochastic import (cy_d1_rho_photocurrent,
 from qutip.ui.progressbar import TextProgressBar
 from qutip.solver import Options
 from qutip.settings import debug
-from qutip.utilities import qobj_list
+from qutip.mesolve import qobj_list
 
 
 if debug:
@@ -1837,6 +1837,35 @@ def _rhs_rho_milstein_homodyne_fast(L, rho_t, t, A, dt, ddW, d1, d2, args):
 
     return drho_t
 
+def _new_smesolve(H, rho0, times, c_ops, sc_ops, e_ops, **kwargs):
+    """
+    This private function is at the top of the 'new section'; all code 
+    below this point is meant to re-do smesolve with the ability to 
+    take time-dependent arguments in the same format as `mesolve`. This
+    function is under development. 
+    """
+    #If c_ops, sc_ops, e_ops are single Qobj instances, cast to list:
+    c_ops, sc_ops, e_ops = map(qobj_list, [c_ops, sc_ops ,e_ops])
+
+    if isinstance(e_ops, dict):
+        e_ops_dict = e_ops
+        e_ops = [e for e in e_ops.values()]
+    else:
+        e_ops_dict = None
+
+    # convert array based time-dependence to string format
+    H, c_ops, args = _stoc_td_wrap_array_str(H, c_ops, sc_ops,
+                                                     args, tlist)
+
+    # check for type (if any) of time-dependent inputs
+    _, n_func, n_str = _stoc_td_format_check(H, c_ops, sc_ops)
+
+    res = None
+
+    #Dispatch the appropriate solver
+
+    return res
+
 def _smesolve_const(H, rho0, times, c_ops, sc_ops, e_ops, **kwargs):
     """
     Internal function, prepares input for `_generic_sde_solve` when the
@@ -1862,5 +1891,14 @@ def _smesolve_func_td(H, rho0, times, c_ops, sc_ops, e_ops, **kwargs):
     """
     Internal function, prepares input for `_generic_sde_solve` when the
     arguments `H`, `c_ops`, `sc_ops`, `m_ops` are all constant.
+    """
+    pass
+
+def _generic_sde_solve(r, rho0, tlist, e_ops, solver, ntraj, 
+                                                    opt, progress_bar):
+    """
+    Once time-dependence has been incorporated into a solver object
+    `r`, integrates the stochastic differential equation using the 
+    chosen solver.
     """
     pass
