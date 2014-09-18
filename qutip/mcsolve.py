@@ -212,7 +212,7 @@ def mcsolve(H, psi0, tlist, c_ops, e_ops, ntraj=None,
         config.soft_reset()
 
         # check for type of time-dependence (if any)
-        time_type, h_stuff, c_stuff = _td_format_check(H, c_ops, 'mc')
+        time_type, h_stuff, c_stuff = _td_format_check(H, c_ops, solver='mc')
         c_terms = len(c_stuff[0]) + len(c_stuff[1]) + len(c_stuff[2])
         # set time_type for use in multiprocessing
         config.tflag = time_type
