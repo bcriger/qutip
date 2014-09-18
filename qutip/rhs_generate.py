@@ -358,19 +358,20 @@ def _td_format_check(H, c_ops, sc_ops=None, solver='me'):
 
         return time_type, [h_const, h_func, h_str], [c_const, c_func, c_str]
     elif solver == 'sme':
-        pass
+        return (len(h_const + c_const + sc_const),
+                len(h_func) + len(c_func) + len(sc_func),
+                len(h_str) + len(c_str) + len(sc_str))
     else:
-        raise ValueError("Unrecognized solver: %s".solver)
+        raise ValueError("Unrecognized solver: %s" % solver)
 
 
-def _td_wrap_array_str(H, c_ops, args, times):
+def _td_wrap_array_str(H, c_ops, args, times, sc_ops=None):
     """
     Wrap numpy-array based time-dependence in the string-based time dependence
     format
     """
     n = 0
     H_new = []
-    c_ops_new = []
     args_new = {}
 
     if not isinstance(H, list):
@@ -388,21 +389,10 @@ def _td_wrap_array_str(H, c_ops, args, times):
             else:
                 H_new.append(Hk)
 
-    if not isinstance(c_ops, list):
-        c_ops_new = c_ops
-    else:
-        for ck in c_ops:
-            if isinstance(ck, list) and isinstance(ck[1], np.ndarray):
-                c_op, c_td = ck
-                td_array_name = "_td_array_%d" % n
-                c_td_str = '(0 if (t > %f) else %s[round(%d * (t/%f))])' %\
-                    (times[-1], td_array_name, len(times) - 1, times[-1])
-                args_new[td_array_name] = c_td
-                c_ops_new.append([c_op, c_td_str])
-                n += 1
-            else:
-                c_ops_new.append(ck)
-
+    c_ops_new, args_new, n = new_args_update(c_ops, args_new, n, times)
+    if sc_ops:
+        sc_ops_new, args_new, n = new_args_update(sc_ops, args_new, n, times)
+    
     if not args_new:
         args_new = args
     elif isinstance(args, dict):
@@ -410,8 +400,10 @@ def _td_wrap_array_str(H, c_ops, args, times):
     else:
         raise ValueError("Time-dependent array format requires args to " +
                          "be a dictionary")
-
-    return H_new, c_ops_new, args_new
+    if sc_ops:
+        return H_new, c_ops_new, args_new, sc_ops_new
+    else:
+        return H_new, c_ops_new, args_new
 
 def collapse_op_check(c_ops):
     c_const = []
@@ -440,3 +432,22 @@ def collapse_op_check(c_ops):
         raise TypeError("Incorrect collapse operator specification")
 
     return c_const, c_func, c_str 
+
+def new_args_update(ops, args_new, n, times):
+    ops_new = []
+    if not isinstance(ops, list):
+        ops_new = ops
+    else:
+        for ck in ops:
+            if isinstance(ck, list) and isinstance(ck[1], np.ndarray):
+                op, td = ck
+                td_array_name = "_td_array_%d" % n
+                td_str = '(0 if (t > %f) else %s[round(%d * (t/%f))])' %\
+                    (times[-1], td_array_name, len(times) - 1, times[-1])
+                args_new[td_array_name] = td
+                ops_new.append([op, td_str])
+                n += 1
+            else:
+                ops_new.append(ck)
+
+    return ops_new, args_new, n

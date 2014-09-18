@@ -1854,15 +1854,108 @@ def _new_smesolve(H, rho0, times, c_ops, sc_ops, e_ops, **kwargs):
         e_ops_dict = None
 
     # convert array based time-dependence to string format
-    H, c_ops, args = _stoc_td_wrap_array_str(H, c_ops, sc_ops,
-                                                     args, tlist)
+    H, c_ops, args, sc_ops = _td_wrap_array_str(H, c_ops, args, tlist, sc_ops)
 
     # check for type (if any) of time-dependent inputs
     _, n_func, n_str = _td_format_check(H, c_ops, sc_ops, solver='sme')
 
+    sso = StochasticSolverOptions(H=H, state0=rho0, times=times, c_ops=c_ops,
+                                  sc_ops=sc_ops, e_ops=e_ops, **kwargs)
+
+    if (sso.d1 is None) or (sso.d2 is None):
+
+        if sso.method == 'homodyne' or sso.method is None:
+            sso.d1 = d1_rho_homodyne
+            sso.d2 = d2_rho_homodyne
+            sso.d2_len = 1
+            sso.homogeneous = True
+            sso.distribution = 'normal'
+            if "dW_factors" not in kwargs:
+                sso.dW_factors = np.array([np.sqrt(1)])
+            if "m_ops" not in kwargs:
+                sso.m_ops = [[c + c.dag()] for c in sso.sc_ops]
+
+        elif sso.method == 'heterodyne':
+            sso.d1 = d1_rho_heterodyne
+            sso.d2 = d2_rho_heterodyne
+            sso.d2_len = 2
+            sso.homogeneous = True
+            sso.distribution = 'normal'
+            if "dW_factors" not in kwargs:
+                sso.dW_factors = np.array([np.sqrt(2), np.sqrt(2)])
+            if "m_ops" not in kwargs:
+                sso.m_ops = [[(c + c.dag()), -1j * (c - c.dag())]
+                             for c in sso.sc_ops]
+
+        elif sso.method == 'photocurrent':
+            sso.d1 = cy_d1_rho_photocurrent
+            sso.d2 = cy_d2_rho_photocurrent
+            sso.d2_len = 1
+            sso.homogeneous = False
+            sso.distribution = 'poisson'
+
+            if "dW_factors" not in kwargs:
+                sso.dW_factors = np.array([1])
+            if "m_ops" not in kwargs:
+                sso.m_ops = [[None] for c in sso.sc_ops]
+        else:
+            raise Exception("Unrecognized method '%s'." % sso.method)
+
+    if sso.distribution == 'poisson':
+        sso.homogeneous = False
+
+    if sso.generate_A_ops is None:
+        sso.generate_A_ops = _generate_rho_A_ops
+
+    if sso.rhs is None:
+        if sso.solver == 'euler-maruyama' or sso.solver is None:
+            sso.rhs = _rhs_rho_euler_maruyama
+
+        elif sso.solver == 'milstein':
+            if sso.method == 'homodyne' or sso.method is None:
+                if len(sc_ops) == 1:
+                    sso.rhs = _rhs_rho_milstein_homodyne_single
+                else:
+                    sso.rhs = _rhs_rho_milstein_homodyne
+
+            elif sso.method == 'heterodyne':
+                sso.rhs = _rhs_rho_milstein_homodyne
+                sso.d2_len = 1
+                sso.sc_ops = []
+                for sc in iter(sc_ops):
+                    sso.sc_ops += [sc / np.sqrt(2), -1.0j * sc / np.sqrt(2)]
+
+        elif sso.solver == 'fast-euler-maruyama' and sso.method == 'homodyne':
+            sso.rhs = _rhs_rho_euler_homodyne_fast
+            sso.generate_A_ops = _generate_A_ops_Euler
+
+        elif sso.solver == 'fast-milstein':
+            sso.generate_A_ops = _generate_A_ops_Milstein
+            sso.generate_noise = _generate_noise_Milstein
+            if sso.method == 'homodyne' or sso.method is None:
+                if len(sc_ops) == 1:
+                    sso.rhs = _rhs_rho_milstein_homodyne_single_fast
+                elif len(sc_ops) == 2:
+                    sso.rhs = _rhs_rho_milstein_homodyne_two_fast
+                else:
+                    sso.rhs = _rhs_rho_milstein_homodyne_fast
+
+            elif sso.method == 'heterodyne':
+                sso.d2_len = 1
+                sso.sc_ops = []
+                for sc in iter(sc_ops):
+                    sso.sc_ops += [sc / np.sqrt(2), -1.0j * sc / np.sqrt(2)]
+                if len(sc_ops) == 1:
+                    sso.rhs = _rhs_rho_milstein_homodyne_two_fast
+                else:
+                    sso.rhs = _rhs_rho_milstein_homodyne_fast
+
+        else:
+            raise Exception("Unrecognized solver '%s'." % sso.solver)
+
     res = None
 
-    #Dispatch the appropriate solver
+    # TODO: Dispatch the appropriate solver
 
     return res
 
