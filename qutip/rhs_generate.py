@@ -357,7 +357,7 @@ def _td_format_check(H, c_ops, sc_ops=None, solver='me'):
                 raise Exception("Error determining time-dependence.")
 
         return time_type, [h_const, h_func, h_str], [c_const, c_func, c_str]
-    elif solver = 'sme':
+    elif solver == 'sme':
         pass
     else:
         raise ValueError("Unrecognized solver: %s".solver)
