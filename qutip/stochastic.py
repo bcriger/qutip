@@ -848,7 +848,7 @@ def _smesolve_generic(sso, options, progress_bar):
         rho_t = mat2vec(sso.state0.full()).ravel()
 
         # noise = sso.noise[n] if sso.noise else None
-        if sso.noise:
+        if sso.noise is not None:
             noise = sso.noise[n]
         elif sso.generate_noise:
             noise = sso.generate_noise(len(A_ops), N_store, N_substeps,
