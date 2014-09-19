@@ -385,7 +385,7 @@ def smesolve(H, rho0, times, c_ops, sc_ops, e_ops, **kwargs):
     sc_ops : list of :class:`qutip.Qobj`
         List of stochastic collapse operators. Each stochastic collapse
         operator will give a deterministic and stochastic contribution
-        to the eqaution of motion according to how the d1 and d2 functions
+        to the equation of motion according to how the d1 and d2 functions
         are defined.
 
     e_ops : list of :class:`qutip.Qobj` / callback function single
@@ -518,6 +518,7 @@ def smesolve(H, rho0, times, c_ops, sc_ops, e_ops, **kwargs):
             raise Exception("Unrecognized solver '%s'." % sso.solver)
 
     res = _smesolve_generic(sso, sso.options, sso.progress_bar)
+    
 
     if e_ops_dict:
         res.expect = {e: res.expect[n]
@@ -1623,7 +1624,6 @@ def _rhs_rho_euler_maruyama(L, rho_t, t, A_ops, dt, dW, d1, d2, args):
     dW_len = len(dW[0, :])
 
     drho_t = _rhs_rho_deterministic(L, rho_t, t, dt, args)
-
     for a_idx, A in enumerate(A_ops):
         d2_vec = d2(t, rho_t, A, args)
         drho_t += d1(t, rho_t, A, args) * dt
